@@ -3,7 +3,7 @@
 #
 # Description:
 # ================================================================
-# Time-stamp: "2022-09-27 08:43:39 trottar"
+# Time-stamp: "2022-12-30 11:55:48 trottar"
 # ================================================================
 #
 # Author:  Richard L. Trotta III <trotta@cua.edu>
@@ -43,11 +43,11 @@ DEBUG = False # Flag for no cut plots
 # Input params
 heep_kinematics = sys.argv[1]
 InDATAFilename = sys.argv[2]
-data_charge = int(sys.argv[3])/1000
+data_charge = int(sys.argv[3])/1000 # Convert uC to mC
 InData_efficiency = sys.argv[4]
 data_runNums = sys.argv[5]
 InDUMMYFilename = sys.argv[6]
-dummy_charge = int(sys.argv[7])/1000
+dummy_charge = int(sys.argv[7])/1000 # Convert uC to mC
 InDummy_efficiency = sys.argv[8]
 dummy_runNums = sys.argv[9]
 InSIMCFilename = sys.argv[10]
@@ -57,13 +57,17 @@ efficiency_table = sys.argv[12]
 ################################################################################################################################################
 # Grab and calculate efficiency 
 
-sys.path.append('../')
+sys.path.append('../../')
 from getDataTable import calculate_effError
 
 tot_effError_data = [calculate_effError(run,efficiency_table) for run in data_runNums.split(' ')]
+#print(InData_efficiency)
+#print(tot_effError_data)
 eff_errProp_data = sum(tot_effError_data) # Error propagation for addition
 
 tot_effError_dummy = [calculate_effError(run,efficiency_table) for run in dummy_runNums.split(' ')]
+#print(InDummy_efficiency)
+#print(tot_effError_dummy)
 eff_errProp_dummy = sum(tot_effError_dummy) # Error propagation for addition
 
 print("\n\nTotal Data Efficiency Uncertainty =",eff_errProp_data)

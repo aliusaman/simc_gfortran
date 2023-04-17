@@ -95,8 +95,8 @@ else
     # HARD CODED #
     ##############
     # Defines efficiency table to use
-    EffData="coin_heep_HeePCoin_efficiency_data_2022_12_02.csv"
     #EffData="coin_heep_HeePCoin_efficiency_data_2022_09_09.csv"
+    EffData="coin_heep_HeePCoin_efficiency_data_2022_12_02.csv"
     InDATAFilename="Raw_Data_${KIN}.root"
     InDUMMYFilename="Raw_DummyData_${KIN}.root"
     InSIMCFilename="Heep_Coin_${KIN}.root"
@@ -152,7 +152,7 @@ fi
 # will create a new root file per run number which are combined using hadd
 if [[ $a_flag = "true" ]]; then
     if [[ $s_flag = "true" ]]; then
-	cd "${SIMCPATH}/scripts/SING"
+	cd "${SIMCPATH}/scripts/HeeP/SING"
 	echo
 	echo "Analysing ${SPEC} data..."
 	echo
@@ -173,9 +173,9 @@ if [[ $a_flag = "true" ]]; then
 	echo
 	echo "Combining root files..."  
 	hadd -f ${OutDATAFilename}.root *_-1_${SPEC}_Raw_Data.root
-	rm -f *_-1_${SPEC}_Raw_Data.root
+	#rm -f *_-1_${SPEC}_Raw_Data.root
 
-	cd "${SIMCPATH}/scripts/SING"    
+	cd "${SIMCPATH}/scripts/HeeP/SING"    
 	echo
 	echo "Analysing ${SPEC} dummy data..."
 	echo
@@ -196,9 +196,9 @@ if [[ $a_flag = "true" ]]; then
 	echo
 	echo "Combining root files..."
 	hadd -f ${OutDUMMYFilename}.root *_-1_${SPEC}_Raw_Data.root
-	rm -f *_-1_${SPEC}_Raw_Data.root	
+	#rm -f *_-1_${SPEC}_Raw_Data.root	
     else
-	cd "${SIMCPATH}/scripts/COIN"
+	cd "${SIMCPATH}/scripts/HeeP/COIN"
 	echo
 	echo "Analysing data..."
 	echo
@@ -219,9 +219,9 @@ if [[ $a_flag = "true" ]]; then
 	echo
 	echo "Combining root files..."  
 	hadd -f ${OutDATAFilename}.root *_-1_Raw_Data.root
-	rm -f *_-1_Raw_Data.root
+	for i in *_-1_Raw_Data.root; do mv -- "$i" "${i%_-1_Raw_Data.root}_-1_Raw_Target.root"; done
 
-	cd "${SIMCPATH}/scripts/COIN"    
+	cd "${SIMCPATH}/scripts/HeeP/COIN"    
 	echo
 	echo "Analysing dummy data..."
 	echo
@@ -242,7 +242,7 @@ if [[ $a_flag = "true" ]]; then
 	echo
 	echo "Combining root files..."
 	hadd -f ${OutDUMMYFilename}.root *_-1_Raw_Data.root
-	rm -f *_-1_Raw_Data.root
+	for i in *_-1_Raw_Data.root; do mv -- "$i" "${i%_-1_Raw_Data.root}_-1_Raw_Dummy.root"; done
     fi
 fi
 
@@ -259,10 +259,11 @@ do
     # to get the effective charge per run and saves as an array
     DataChargeVal+=($(python3 findEffectiveCharge.py ${EffData} ${ROOTPREFIX} "$i" -1))
     # Grabs the total effiency value per run and saves as an array
-    DataEffVal+=($(python3 getEfficiency.py "$i" ${EffData}))
+    DataEffVal+=($(python3 getEfficiencyValue.py "$i" ${EffData} "efficiency"))
     DataRunNum+=("$i")
-    #echo "${DataChargeVal[@]} mC"
+    #echo "${DataChargeVal[@]} uC"
 done
+#echo ${DataChargeVal[*]}
 # Sums the array to get the total effective charge
 # Note: this must be done as an array! This is why uC is used at this step
 #       and later converted to C
@@ -278,19 +279,20 @@ echo "Calculating dummy total effective charge..."
 for i in "${dummydata[@]}"
 do
     DummyChargeVal+=($(python3 findEffectiveCharge.py ${EffData} ${ROOTPREFIX} "$i" -1))
-    DummyEffVal+=($(python3 getEfficiency.py "$i" ${EffData}))
+    DummyEffVal+=($(python3 getEfficiencyValue.py "$i" ${EffData} "efficiency"))
     DummyRunNum+=($(echo "$i"))
-    #echo "${DummyChargeVal[@]} mC"
+    #echo "${DummyChargeVal[@]} uC"
 done
+#echo ${DummyChargeVal[*]}
 DummyChargeSum=$(IFS=+; echo "$((${DummyChargeVal[*]}))") # Only works for integers
 echo "${DummyChargeSum} uC"
 
 # Finally, run the plotting script
 if [[ $s_flag = "true" ]]; then
-    cd "${SIMCPATH}/scripts/SING"
+    cd "${SIMCPATH}/scripts/HeeP/SING"
     python3 HeepSing.py ${KIN} "${OutDATAFilename}.root" $DataChargeSum "${DataEffVal[*]}" "${OutDUMMYFilename}.root" $DummyChargeSum "${DummyEffVal[*]}" ${InSIMCFilename} ${OutFullAnalysisFilename} ${EffData} ${SPEC}
 else
-    cd "${SIMCPATH}/scripts/COIN"
+    cd "${SIMCPATH}/scripts/HeeP/COIN"
     python3 HeepCoin.py ${KIN} "${OutDATAFilename}.root" $DataChargeSum "${DataEffVal[*]}" "${DataRunNum[*]}" "${OutDUMMYFilename}.root" $DummyChargeSum "${DummyEffVal[*]}" "${DummyRunNum[*]}" ${InSIMCFilename} ${OutFullAnalysisFilename} ${EffData}
 fi
 
